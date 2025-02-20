@@ -1,8 +1,8 @@
 'use client';
 
-import CharacterSheet from '../components/CharacterSheet';
-import Sidebar from '../components/Sidebar';
-import { useCharacterStore } from '@/app/store/characterStore';
+import CharacterSheet from '../../features/character/components/CharacterSheet';
+import Sidebar from '../../components/Sidebar';
+import { useCharacterStore } from '@/store/characterStore';
 
 export default function CharacterSheetPage() {
   const { characters, activeCharacterId, updateCharacter } = useCharacterStore();

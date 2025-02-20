@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { eryndor } from '@/app/character_example_responses/eryndor';
+import { eryndor } from '@/character_example_responses/eryndor';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({

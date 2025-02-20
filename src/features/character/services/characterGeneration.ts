@@ -1,4 +1,4 @@
-import { CharacterData } from '@/app/types/character';
+import { CharacterData } from '@/features/character/types';
 
 export async function generateCharacter(prompt: string): Promise<CharacterData> {
   const response = await fetch('/api/generate-character', {

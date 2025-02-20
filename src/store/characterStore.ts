@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { CharacterData } from '@/app/types/character';
-import { generateCharacter } from '@/app/services/characterGeneration';
-import { initialCharacterData } from '@/app/data/initialCharacterData';
+import { CharacterData } from '@/features/character/types';
+import { generateCharacter } from '@/features/character/services/characterGeneration';
 import { devtools } from 'zustand/middleware';
+import { baseCharacterData } from '../features/character/constants/baseCharacterData';
 
 interface CharacterStore {
   characters: Record<string, CharacterData>;
@@ -18,7 +18,7 @@ interface CharacterStore {
 export const useCharacterStore = create<CharacterStore>()(
   devtools(
     persist(
-      (set, get) => ({
+      (set) => ({
         characters: {},
         activeCharacterId: null,
 
@@ -48,6 +48,7 @@ export const useCharacterStore = create<CharacterStore>()(
         deleteCharacter: (id) =>
           set((state) => {
             const { [id]: _deleted, ...rest } = state.characters;
+            console.log('Deleted character:', _deleted);
             return {
               characters: rest,
               activeCharacterId: state.activeCharacterId === id ? null : state.activeCharacterId
@@ -59,7 +60,7 @@ export const useCharacterStore = create<CharacterStore>()(
             const promptedCharacter = await generateCharacter(prompt);
             console.log('promptedCharacter', promptedCharacter);
             const generatedCharacter = {
-              ...initialCharacterData,
+              ...baseCharacterData,
               ...promptedCharacter
             };
             const id = crypto.randomUUID();

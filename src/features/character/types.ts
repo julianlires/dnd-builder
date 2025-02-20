@@ -61,7 +61,7 @@ export interface CharacterData {
   alignment: string;
   experiencePoints: string;
   abilityScores: AbilityScores;
-  attributes: AbilityScores;
+  attributes?: AbilityScores;
   inspiration: boolean;
   proficiencyBonus: number;
   savingThrows: SavingThrows;

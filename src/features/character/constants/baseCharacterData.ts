@@ -1,20 +1,21 @@
-import { CharacterData } from '@/app/types/character';
+import { CharacterData } from '@/features/character/types';
 
-export const initialCharacterData: CharacterData = {
+export const baseCharacterData: CharacterData = {
   name: '',
   classLevel: '',
   background: '',
   playerName: '',
   race: '',
   alignment: '',
-  experiencePoints: '',
+  attacks: [],
+  experiencePoints: '0',
   abilityScores: {
     strength: 10,
     dexterity: 10,
     constitution: 10,
     intelligence: 10,
     wisdom: 10,
-    charisma: 10,
+    charisma: 10
   },
   inspiration: false,
   proficiencyBonus: 0,
@@ -24,7 +25,7 @@ export const initialCharacterData: CharacterData = {
     constitution: false,
     intelligence: false,
     wisdom: false,
-    charisma: false,
+    charisma: false
   },
   skills: {
     acrobatics: false,
@@ -44,7 +45,7 @@ export const initialCharacterData: CharacterData = {
     religion: false,
     sleightOfHand: false,
     stealth: false,
-    survival: false,
+    survival: false
   },
   armorClass: 0,
   initiative: 0,
@@ -55,20 +56,19 @@ export const initialCharacterData: CharacterData = {
   hitDice: '',
   deathSaves: {
     successes: 0,
-    failures: 0,
+    failures: 0
   },
-  attacks: [],
   equipment: {
     cp: 0,
     sp: 0,
     ep: 0,
     gp: 0,
     pp: 0,
-    items: '',
+    items: ''
   },
   personality: '',
   ideals: '',
   bonds: '',
   flaws: '',
-  features: '',
+  features: ''
 };

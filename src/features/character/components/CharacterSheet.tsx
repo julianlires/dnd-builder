@@ -1,18 +1,15 @@
 'use client';
 
-import debounce from 'lodash/debounce';
-import { useState, useEffect, useCallback } from 'react';
 import styles from './CharacterSheet.module.css';
-import { CharacterData } from '@/app/types/character';
-import { initialCharacterData } from '@/app/data/initialCharacterData';
-import { useCharacterStore } from '../store/characterStore';
+import { CharacterData, AbilityScores } from '@/features/character/types';
+import { baseCharacterData } from '@/features/character/constants/baseCharacterData';
 
 interface CharacterSheetProps {
-  character?: Partial<CharacterData>;
-  setCharacter?: (data: Partial<CharacterData>) => void;
+  character?: CharacterData;
+  setCharacter: (data: CharacterData) => void;
 }
 
-export default function CharacterSheet({ character = {} as Partial<CharacterData>, setCharacter = (data: Partial<CharacterData>) => {} }: CharacterSheetProps) {
+export default function CharacterSheet({ character = baseCharacterData, setCharacter }: CharacterSheetProps) {
   const calculateModifier = (score: number): string => {
     const modifier = Math.floor((score - 10) / 2);
     return modifier >= 0 ? `+${modifier}` : modifier.toString();
@@ -33,7 +30,7 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
       abilityScores: {
         ...character.abilityScores,
         [ability]: numValue
-      }
+      } as AbilityScores
     });
   };
 
@@ -178,7 +175,7 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
               <input
                 type="checkbox"
                 checked={character.inspiration}
-                onChange={(e) => setCharacter(prev => ({ ...prev, inspiration: e.target.checked }))}
+                onChange={(e) => setCharacter({ ...character, inspiration: e.target.checked })}
                 className={styles.profCheckbox}
               />
             </div>
@@ -188,7 +185,7 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
               <input
                 type="number"
                 value={character.proficiencyBonus}
-                onChange={(e) => setCharacter(prev => ({ ...prev, proficiencyBonus: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => setCharacter({ ...character, proficiencyBonus: parseInt(e.target.value) || 0 })}
                 className={styles.input}
               />
             </div>
@@ -244,7 +241,7 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
               <input
                 type="number"
                 value={character.armorClass}
-                onChange={(e) => setCharacter(prev => ({ ...prev, armorClass: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => setCharacter({ ...character, armorClass: parseInt(e.target.value) || 0 })}
               />
             </div>
             <div className={styles.combatStat}>
@@ -252,7 +249,7 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
               <input
                 type="number"
                 value={character.initiative}
-                onChange={(e) => setCharacter(prev => ({ ...prev, initiative: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => setCharacter({ ...character, initiative: parseInt(e.target.value) || 0 })}
               />
             </div>
             <div className={styles.combatStat}>
@@ -260,7 +257,7 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
               <input
                 type="number"
                 value={character.speed}
-                onChange={(e) => setCharacter(prev => ({ ...prev, speed: parseInt(e.target.value) || 0 }))}
+                onChange={(e) => setCharacter({ ...character, speed: parseInt(e.target.value) || 0 })}
               />
             </div>
 
@@ -270,7 +267,7 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
                 <input
                   type="number"
                   value={character.maxHp}
-                  onChange={(e) => setCharacter(prev => ({ ...prev, maxHp: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) => setCharacter({ ...character, maxHp: parseInt(e.target.value) || 0 })}
                 />
               </div>
               <div className={styles.currentHp}>
@@ -278,7 +275,7 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
                 <input
                   type="number"
                   value={character.currentHp}
-                  onChange={(e) => setCharacter(prev => ({ ...prev, currentHp: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) => setCharacter({ ...character, currentHp: parseInt(e.target.value) || 0 })}
                 />
               </div>
               <div className={styles.tempHp}>
@@ -286,7 +283,7 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
                 <input
                   type="number"
                   value={character.temporaryHp}
-                  onChange={(e) => setCharacter(prev => ({ ...prev, temporaryHp: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) => setCharacter({ ...character, temporaryHp: parseInt(e.target.value) || 0 })}
                 />
               </div>
             </div>
@@ -296,7 +293,7 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
               <input
                 type="text"
                 value={character.hitDice}
-                onChange={(e) => setCharacter(prev => ({ ...prev, hitDice: e.target.value }))}
+                onChange={(e) => setCharacter({ ...character, hitDice: e.target.value })}
               />
             </div>
 
@@ -309,13 +306,13 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
                     key={i}
                     type="checkbox"
                     checked={character.deathSaves.successes >= i}
-                    onChange={(e) => setCharacter(prev => ({
-                      ...prev,
+                    onChange={(e) => setCharacter({
+                      ...character,
                       deathSaves: {
-                        ...prev.deathSaves,
+                        ...character.deathSaves,
                         successes: e.target.checked ? i : i - 1
                       }
-                    }))}
+                    })}
                     className={styles.profCheckbox}
                   />
                 ))}
@@ -327,13 +324,13 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
                     key={i}
                     type="checkbox"
                     checked={character.deathSaves.failures >= i}
-                    onChange={(e) => setCharacter(prev => ({
-                      ...prev,
+                    onChange={(e) => setCharacter({
+                      ...character,
                       deathSaves: {
-                        ...prev.deathSaves,
+                        ...character.deathSaves,
                         failures: e.target.checked ? i : i - 1
                       }
-                    }))}
+                    })}
                     className={styles.profCheckbox}
                   />
                 ))}
@@ -371,10 +368,10 @@ export default function CharacterSheet({ character = {} as Partial<CharacterData
                 <input
                   type="number"
                   value={character.equipment.cp}
-                  onChange={(e) => setCharacter(prev => ({
-                    ...prev,
-                    equipment: { ...prev.equipment, cp: parseInt(e.target.value) || 0 }
-                  }))}
+                  onChange={(e) => setCharacter({
+                    ...character,
+                    equipment: { ...character.equipment, cp: parseInt(e.target.value) || 0 }
+                  })}
                   className={styles.coinInput}
                 />
               </div>

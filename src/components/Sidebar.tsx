@@ -1,6 +1,6 @@
 'use client';
 
-import { useCharacterStore } from '@/app/store/characterStore';
+import { useCharacterStore } from '@/store/characterStore';
 
 export default function Sidebar() {
   const {
