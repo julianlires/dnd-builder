@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -47,6 +48,19 @@ export default function Home() {
           >
             Read our docs
           </a>
+        </div>
+
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold mb-6">D&D Character Manager</h1>
+          <div className="grid gap-4">
+            <Link
+              href="/character-sheet"
+              className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+            >
+              <h2 className="text-xl font-semibold">Character Sheet</h2>
+              <p className="text-gray-600">View and edit your character sheet</p>
+            </Link>
+          </div>
         </div>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
