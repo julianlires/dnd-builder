@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import styles from './chat.module.css';
+import type { Components } from 'react-markdown';
 
 interface Message {
   id: string;
@@ -15,6 +19,7 @@ export default function ChatPage() {
   const [inputMessage, setInputMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -30,30 +35,28 @@ export default function ChatPage() {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
     setIsConnecting(true);
-    console.log(process.env.NEXT_PUBLIC_API_WEBSOCKET_URL);
+    setConnectionError(null);
     const ws = new WebSocket(`${process.env.NEXT_PUBLIC_API_WEBSOCKET_URL}/ws/chat`);
-    console.log(ws);
 
     ws.onopen = () => {
       setIsConnected(true);
       setIsConnecting(false);
-      addMessage('Connected to server', 'server');
+      setConnectionError(null);
     };
 
     ws.onmessage = (event) => {
-      console.log(event.data);
       addMessage(event.data, 'server');
     };
 
     ws.onclose = () => {
       setIsConnected(false);
-      addMessage('Disconnected from server', 'server');
+      setConnectionError(null);
     };
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
       setIsConnecting(false);
-      addMessage('Error connecting to server', 'server');
+      setConnectionError('Failed to connect to server');
     };
 
     wsRef.current = ws;
@@ -63,6 +66,7 @@ export default function ChatPage() {
     wsRef.current?.close();
     wsRef.current = null;
     setIsConnected(false);
+    setConnectionError(null);
   };
 
   const addMessage = (text: string, sender: 'user' | 'server') => {
@@ -83,18 +87,56 @@ export default function ChatPage() {
     setInputMessage('');
   };
 
+  const MarkdownComponents: Components = {
+    code(props) {
+      const { children, className, ...rest } = props;
+      const match = /language-(\w+)/.exec(className || '');
+      const language = match ? match[1] : '';
+      const isInline = !className;
+
+      return isInline ? (
+        <code className={styles.inlineCode} {...rest}>
+          {children}
+        </code>
+      ) : (
+        <SyntaxHighlighter
+          style={vscDarkPlus}
+          language={language}
+          PreTag="div"
+        >
+          {String(children).replace(/\n$/, '')}
+        </SyntaxHighlighter>
+      );
+    }
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.chatContainer}>
         <div className={styles.header}>
           <h1>Chat</h1>
-          <button
-            onClick={isConnected ? disconnect : connect}
-            className={`${styles.connectButton} ${isConnected ? styles.connected : ''}`}
-            disabled={isConnecting}
-          >
-            {isConnecting ? 'Connecting...' : isConnected ? 'Disconnect' : 'Connect'}
-          </button>
+          <div className={styles.headerRight}>
+            {connectionError ? (
+              <div className={`${styles.connectionStatus} ${styles.error}`}>
+                {connectionError}
+              </div>
+            ) : isConnected ? (
+              <div className={`${styles.connectionStatus} ${styles.success}`}>
+                Connected
+              </div>
+            ) : isConnecting ? (
+              <div className={styles.connectionStatus}>
+                Connecting...
+              </div>
+            ) : null}
+            <button
+              onClick={isConnected ? disconnect : connect}
+              className={`${styles.connectButton} ${isConnected ? styles.connected : ''}`}
+              disabled={isConnecting}
+            >
+              {isConnecting ? 'Connecting...' : isConnected ? 'Disconnect' : 'Connect'}
+            </button>
+          </div>
         </div>
 
         <div className={styles.messagesContainer}>
@@ -104,7 +146,15 @@ export default function ChatPage() {
               className={`${styles.message} ${styles[message.sender]}`}
             >
               <div className={styles.messageContent}>
-                <p>{message.text}</p>
+                {message.sender === 'server' ? (
+                  <div className={styles.markdown}>
+                    <ReactMarkdown components={MarkdownComponents}>
+                      {message.text}
+                    </ReactMarkdown>
+                  </div>
+                ) : (
+                  <p>{message.text}</p>
+                )}
                 <span className={styles.timestamp}>
                   {message.timestamp.toLocaleTimeString()}
                 </span>

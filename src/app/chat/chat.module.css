@@ -28,6 +28,28 @@
   border-bottom: 1px solid #eaeaea;
 }
 
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.connectionStatus {
+  font-size: 0.875rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.connectionStatus.error {
+  color: #ef4444;
+}
+
+.connectionStatus.success {
+  color: #10b981;
+}
+
 .header h1 {
   margin: 0;
   font-size: 1.5rem;
@@ -108,7 +130,106 @@
 
 .message.server .messageContent p {
   white-space: pre-wrap;
-  font-family: monospace;
+}
+
+.markdown {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.markdown p {
+  margin: 0 0 1em 0;
+}
+
+.markdown p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  margin: 1.5em 0 0.5em;
+  line-height: 1.2;
+}
+
+.markdown h1:first-child,
+.markdown h2:first-child,
+.markdown h3:first-child,
+.markdown h4:first-child,
+.markdown h5:first-child,
+.markdown h6:first-child {
+  margin-top: 0;
+}
+
+.markdown ul,
+.markdown ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.markdown li {
+  margin: 0.25em 0;
+}
+
+.markdown code {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9em;
+  padding: 0.2em 0.4em;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.markdown pre {
+  margin: 1em 0;
+  padding: 0;
+  background: none;
+}
+
+.markdown pre > div {
+  margin: 0 !important;
+  border-radius: 6px;
+}
+
+.markdown blockquote {
+  margin: 1em 0;
+  padding-left: 1em;
+  border-left: 4px solid #e5e7eb;
+  color: #666;
+}
+
+.markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1em 0;
+}
+
+.markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.markdown th,
+.markdown td {
+  padding: 0.5em;
+  border: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.markdown th {
+  background-color: #f3f4f6;
+}
+
+.inlineCode {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9em;
+  padding: 0.2em 0.4em;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
 }
 
 .timestamp {
