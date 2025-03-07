@@ -1,82 +1,129 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { CharacterData } from '@/features/character/types';
-import { generateCharacter } from '@/features/character/services/characterGeneration';
 import { devtools } from 'zustand/middleware';
-import { baseCharacterData } from '../features/character/constants/baseCharacterData';
 
 interface CharacterStore {
   characters: Record<string, CharacterData>;
   activeCharacterId: string | null;
   setActiveCharacter: (id: string) => void;
-  addCharacter: (character: CharacterData) => string;
-  updateCharacter: (id: string, updates: Partial<CharacterData>) => void;
-  deleteCharacter: (id: string) => void;
-  generateFromPrompt: (prompt: string) => Promise<string>;
+  addCharacter: (character: CharacterData) => Promise<string>;
+  updateCharacter: (id: string, updates: Partial<CharacterData>) => Promise<void>;
+  deleteCharacter: (id: string) => Promise<void>;
+  fetchCharacter: (id: string) => Promise<void>;
 }
 
 export const useCharacterStore = create<CharacterStore>()(
   devtools(
     persist(
-      (set) => ({
+      (set, get) => ({
         characters: {},
         activeCharacterId: null,
 
         setActiveCharacter: (id) =>
           set({ activeCharacterId: id }),
 
-        addCharacter: (character) => {
-          const id = crypto.randomUUID();
-          set((state) => ({
-            characters: {
-              ...state.characters,
-              [id]: character
-            },
-            activeCharacterId: id
-          }));
-          return id;
-        },
-
-        updateCharacter: (id, updates) =>
-          set((state) => ({
-            characters: {
-              ...state.characters,
-              [id]: { ...state.characters[id], ...updates }
-            }
-          })),
-
-        deleteCharacter: (id) =>
-          set((state) => {
-            const { [id]: _deleted, ...rest } = state.characters;
-            console.log('Deleted character:', _deleted);
-            return {
-              characters: rest,
-              activeCharacterId: state.activeCharacterId === id ? null : state.activeCharacterId
-            };
-          }),
-
-        generateFromPrompt: async (prompt: string) => {
+        addCharacter: async (character) => {
           try {
-            const promptedCharacter = await generateCharacter(prompt);
-            console.log('promptedCharacter', promptedCharacter);
-            const generatedCharacter = {
-              ...baseCharacterData,
-              ...promptedCharacter
-            };
-            const id = crypto.randomUUID();
+            const response = await fetch('/api/characters', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(character),
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to save character');
+            }
+
+            const { id } = await response.json();
+
             set((state) => ({
               characters: {
                 ...state.characters,
-                [id]: generatedCharacter
+                [id]: character
               },
               activeCharacterId: id
             }));
+
             return id;
           } catch (error) {
-            console.error('Failed to generate character:', error);
+            console.error('Error adding character:', error);
             throw error;
           }
-        }
+        },
+
+        updateCharacter: async (id, updates) => {
+          try {
+            const response = await fetch(`/api/characters/${id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(updates),
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to update character');
+            }
+
+            set((state) => ({
+              characters: {
+                ...state.characters,
+                [id]: { ...state.characters[id], ...updates }
+              }
+            }));
+          } catch (error) {
+            console.error('Error updating character:', error);
+            throw error;
+          }
+        },
+
+        deleteCharacter: async (id) => {
+          try {
+            const response = await fetch(`/api/characters/${id}`, {
+              method: 'DELETE',
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to delete character');
+            }
+
+            set((state) => {
+              const { [id]: _, ...rest } = state.characters;
+              return {
+                characters: rest,
+                activeCharacterId: state.activeCharacterId === id ? null : state.activeCharacterId
+              };
+            });
+          } catch (error) {
+            console.error('Error deleting character:', error);
+            throw error;
+          }
+        },
+
+        fetchCharacter: async (id) => {
+          try {
+            const response = await fetch(`/api/characters/${id}`);
+
+            if (!response.ok) {
+              throw new Error('Failed to fetch character');
+            }
+
+            const character = await response.json();
+
+            set((state) => ({
+              characters: {
+                ...state.characters,
+                [id]: character
+              }
+            }));
+          } catch (error) {
+            console.error('Error fetching character:', error);
+            throw error;
+          }
+        },
       }),
       {
         name: 'character-storage'

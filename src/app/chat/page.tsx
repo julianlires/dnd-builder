@@ -6,6 +6,9 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import styles from './chat.module.css';
 import type { Components } from 'react-markdown';
+import CharacterSheet from '@/features/character/components/CharacterSheet';
+import { useCharacterStore } from '@/store/characterStore';
+import { CharacterData } from '@/features/character/types';
 
 interface Message {
   id: string;
@@ -22,6 +25,7 @@ export default function ChatPage() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { characters, activeCharacterId, updateCharacter, setActiveCharacter, fetchCharacter } = useCharacterStore();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -45,7 +49,18 @@ export default function ChatPage() {
     };
 
     ws.onmessage = (event) => {
-      addMessage(event.data, 'server');
+      const data = JSON.parse(event.data);
+      if (data.type === 'message') {
+        addMessage(data.content, 'server');
+      } else if (data.type === 'action') {
+        if (data.action === 'update_character') {
+          if (data.data) {
+            fetchCharacter(data.data);
+          }
+        } else if (data.action === 'create_character') {
+          setActiveCharacter(data.data);
+        }
+      }
     };
 
     ws.onclose = () => {
@@ -87,6 +102,12 @@ export default function ChatPage() {
     setInputMessage('');
   };
 
+  const handleCharacterUpdate = (character: CharacterData) => {
+    if (activeCharacterId) {
+      updateCharacter(activeCharacterId, character);
+    }
+  };
+
   const MarkdownComponents: Components = {
     code(props) {
       const { children, className, ...rest } = props;
@@ -111,76 +132,105 @@ export default function ChatPage() {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.chatContainer}>
-        <div className={styles.header}>
-          <h1>Chat</h1>
-          <div className={styles.headerRight}>
-            {connectionError ? (
-              <div className={`${styles.connectionStatus} ${styles.error}`}>
-                {connectionError}
+    <div className={styles.pageContainer}>
+      <div className={styles.container}>
+        <div className={styles.chatContainer}>
+          <div className={styles.header}>
+            <h1>Chat</h1>
+            <div className={styles.headerRight}>
+              {connectionError ? (
+                <div className={`${styles.connectionStatus} ${styles.error}`}>
+                  {connectionError}
+                </div>
+              ) : isConnected ? (
+                <div className={`${styles.connectionStatus} ${styles.success}`}>
+                  Connected
+                </div>
+              ) : isConnecting ? (
+                <div className={styles.connectionStatus}>
+                  Connecting...
+                </div>
+              ) : null}
+              <button
+                onClick={isConnected ? disconnect : connect}
+                className={`${styles.connectButton} ${isConnected ? styles.connected : ''}`}
+                disabled={isConnecting}
+              >
+                {isConnecting ? 'Connecting...' : isConnected ? 'Disconnect' : 'Connect'}
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.messagesContainer}>
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`${styles.message} ${styles[message.sender]}`}
+              >
+                <div className={styles.messageContent}>
+                  {message.sender === 'server' ? (
+                    <div className={styles.markdown}>
+                      <ReactMarkdown components={MarkdownComponents}>
+                        {message.text}
+                      </ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p>{message.text}</p>
+                  )}
+                  <span className={styles.timestamp}>
+                    {message.timestamp.toLocaleTimeString()}
+                  </span>
+                </div>
               </div>
-            ) : isConnected ? (
-              <div className={`${styles.connectionStatus} ${styles.success}`}>
-                Connected
-              </div>
-            ) : isConnecting ? (
-              <div className={styles.connectionStatus}>
-                Connecting...
-              </div>
-            ) : null}
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <form onSubmit={sendMessage} className={styles.inputContainer}>
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Type a message..."
+              disabled={!isConnected}
+              className={styles.input}
+            />
             <button
-              onClick={isConnected ? disconnect : connect}
-              className={`${styles.connectButton} ${isConnected ? styles.connected : ''}`}
-              disabled={isConnecting}
+              type="submit"
+              disabled={!isConnected || !inputMessage.trim()}
+              className={styles.sendButton}
             >
-              {isConnecting ? 'Connecting...' : isConnected ? 'Disconnect' : 'Connect'}
+              Send
             </button>
+          </form>
+        </div>
+        <div className={styles.characterSheetContainer}>
+          {/* {activeCharacterId && characters[activeCharacterId] ? (
+            <CharacterSheet
+              character={characters[activeCharacterId]}
+              setCharacter={handleCharacterUpdate}
+            />
+          ) : (
+            <div className={styles.noCharacter}>
+              <p>No character selected</p>
+              <p>Please select or create a character to view details</p>
+            </div>
+          )} */}
+          <div>
+            {
+              activeCharacterId && characters[activeCharacterId] && (
+                Object.keys(characters[activeCharacterId]).map((key) => {
+                  return (
+                    <p key={key} style={{ color: 'white' }}>
+                      <strong>{key}</strong>: {characters[activeCharacterId][key].toString()}
+                    </p>
+                  )
+                })
+              )
+            }
+
           </div>
         </div>
-
-        <div className={styles.messagesContainer}>
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`${styles.message} ${styles[message.sender]}`}
-            >
-              <div className={styles.messageContent}>
-                {message.sender === 'server' ? (
-                  <div className={styles.markdown}>
-                    <ReactMarkdown components={MarkdownComponents}>
-                      {message.text}
-                    </ReactMarkdown>
-                  </div>
-                ) : (
-                  <p>{message.text}</p>
-                )}
-                <span className={styles.timestamp}>
-                  {message.timestamp.toLocaleTimeString()}
-                </span>
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <form onSubmit={sendMessage} className={styles.inputContainer}>
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Type a message..."
-            disabled={!isConnected}
-            className={styles.input}
-          />
-          <button
-            type="submit"
-            disabled={!isConnected || !inputMessage.trim()}
-            className={styles.sendButton}
-          >
-            Send
-          </button>
-        </form>
       </div>
     </div>
   );
